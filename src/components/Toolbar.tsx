@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 
 interface ToolbarProps {
   list: string[];
@@ -8,23 +8,29 @@ interface ToolbarProps {
 
 const Toolbar: React.FC<ToolbarProps> = ({ list, onChange, current }) => {
   return (
-    <div className="btn-group">
-      {list.map((item, index) => (
-        <a
-          href="#"
-          className={`btn btn-primary ${item === current || (current === "" && index === 0) ? "active" : ""}`}
-          aria-current={
-            item === current || (current === "" && index === 0)
-              ? "page"
-              : undefined
-          }
-          onClick={() => {
-            onChange(item);
-          }}
-        >
-          {item}
-        </a>
-      ))}
+    <div className="container">
+      <div className="row justify-content-center">
+        <div className="col-auto">
+          <div className="btn-group">
+            {list.map((item, index) => (
+              <a
+                href="#"
+                className={`btn btn-primary ${item === current || (current === "" && index === 0) ? "active" : ""}`}
+                aria-current={
+                  item === current || (current === "" && index === 0)
+                    ? "page"
+                    : undefined
+                }
+                onClick={() => {
+                  onChange(item);
+                }}
+              >
+                {item}
+              </a>
+            ))}
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
