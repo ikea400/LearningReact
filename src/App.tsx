@@ -1,0 +1,25 @@
+import RandomImageList from "./components/RandomImageList.tsx";
+import Toolbar from "./components/Toolbar.tsx";
+import InfoForm from "./components/InfoForm.tsx";
+import { useState } from "react";
+
+function App() {
+  const [current, setCurrent] = useState("");
+  return (
+    <>
+      <Toolbar
+        list={["First", "Second", "Third", "Four"]}
+        onChange={(current: string) => {
+          setCurrent(current);
+          console.log(current);
+        }}
+        current={current}
+      />
+      <h1>Test</h1>
+      {current === "First" ? (<RandomImageList /> : <In)}
+
+    </>
+  );
+}
+
+export default App;
