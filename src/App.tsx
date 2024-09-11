@@ -8,7 +8,7 @@ function App() {
   return (
     <>
       <Toolbar
-        list={["First", "Second", "Third", "Four"]}
+        list={["images", "form", "Third", "Four"]}
         onChange={(current: string) => {
           setCurrent(current);
           console.log(current);
@@ -16,7 +16,10 @@ function App() {
         current={current}
       />
       <h1>Test</h1>
-      {current === "First" ? <RandomImageList /> : <InfoForm />}
+        {current === "images" && <RandomImageList />}
+        {current === "form" && <InfoForm />}
+
+
     </>
   );
 }
