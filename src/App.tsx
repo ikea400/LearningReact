@@ -16,8 +16,7 @@ function App() {
         current={current}
       />
       <h1>Test</h1>
-      {current === "First" ? (<RandomImageList /> : <In)}
-
+      {current === "First" ? <RandomImageList /> : <InfoForm />}
     </>
   );
 }
