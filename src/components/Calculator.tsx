@@ -151,7 +151,11 @@ function PerformPemdasEquation(): number | undefined {
       bestPos = -1;
       operators.forEach((operator) => {
         const index = operationsCopy.indexOf(operator);
-        if (index > bestPos) bestPos = index;
+        if (bestPos === -1) {
+          bestPos = index;
+        } else if (index !== -1) {
+          if (index < bestPos) bestPos = index;
+        }
       });
       console.log("bestPos " + bestPos);
       if (bestPos > -1) {
@@ -171,6 +175,14 @@ function PerformPemdasEquation(): number | undefined {
         const first = operationsCopy[bestPos - 1] as number;
         const second = operationsCopy[bestPos + 1] as number;
         let value = first;
+        console.log(
+          "Calculating: " +
+            first +
+            " " +
+            operationsCopy[bestPos] +
+            " " +
+            second,
+        );
         switch (operationsCopy[bestPos]) {
           case OperatorType.Addition:
             value += second;
