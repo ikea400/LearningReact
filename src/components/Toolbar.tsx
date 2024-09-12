@@ -15,6 +15,7 @@ const Toolbar: React.FC<ToolbarProps> = ({ list, onChange, current }) => {
             {list.map((item, index) => (
               <a
                 href="#"
+                key={"toolbox " + index + item}
                 className={`btn btn-primary ${item === current || (current === "" && index === 0) ? "active" : ""}`}
                 aria-current={
                   item === current || (current === "" && index === 0)
