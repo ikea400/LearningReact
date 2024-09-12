@@ -12,6 +12,8 @@ enum OperatorType {
   Substraction = "Substraction",
   Multiplication = "Multiplication",
   Division = "Division",
+  Square = "Square",
+  Sqrt = "Sqrt",
 }
 
 interface OperationProps {
@@ -104,8 +106,18 @@ function parseFloatWithComma(input: string) {
 function PerformPemdasEquation(): number | undefined {
   let hasError = false;
   const operatorPriority = [
-    [OperatorType.Multiplication, OperatorType.Division],
-    [OperatorType.Addition, OperatorType.Substraction],
+    {
+      list: [OperatorType.Square, OperatorType.Sqrt],
+      isDouble: false,
+    },
+    {
+      list: [OperatorType.Multiplication, OperatorType.Division],
+      isDouble: true,
+    },
+    {
+      list: [OperatorType.Addition, OperatorType.Substraction],
+      isDouble: true,
+    },
   ];
 
   const operationsCopy: (number | string)[] = [];
@@ -116,7 +128,10 @@ function PerformPemdasEquation(): number | undefined {
         hasError = true;
       }
       operationsCopy.push(value);
-    } else if (operation.type === OperationType.DoubleOperator) {
+    } else if (
+      operation.type === OperationType.DoubleOperator ||
+      operation.type === OperationType.SingleOperator
+    ) {
       let operator = OperatorType.None;
       switch (operation.data) {
         case "+":
@@ -131,13 +146,19 @@ function PerformPemdasEquation(): number | undefined {
         case "÷":
           operator = OperatorType.Division;
           break;
+        case "x²":
+          operator = OperatorType.Square;
+          break;
+        case "√":
+          operator = OperatorType.Sqrt;
+          break;
         default:
           hasError = true;
           break;
       }
 
       operationsCopy.push(operator);
-    }
+    } else hasError = true;
   });
 
   console.log("Start " + operationsCopy);
@@ -149,7 +170,7 @@ function PerformPemdasEquation(): number | undefined {
     let bestPos: number;
     do {
       bestPos = -1;
-      operators.forEach((operator) => {
+      operators.list.forEach((operator) => {
         const index = operationsCopy.indexOf(operator);
         if (bestPos === -1) {
           bestPos = index;
@@ -159,57 +180,90 @@ function PerformPemdasEquation(): number | undefined {
       });
       console.log("bestPos " + bestPos);
       if (bestPos > -1) {
-        //Currently handle only the double operator  ex: +-X/  and not the single op like sqrt
-        if (
-          bestPos === 0 ||
-          bestPos === operationsCopy.length - 1 ||
-          typeof operationsCopy[bestPos - 1] !== "number" ||
-          typeof operationsCopy[bestPos + 1] !== "number" ||
-          typeof operationsCopy[bestPos] === "number"
-        ) {
-          console.log("shit " + typeof operationsCopy[bestPos]);
-          hasError = true;
-          break;
-        }
-
-        const first = operationsCopy[bestPos - 1] as number;
-        const second = operationsCopy[bestPos + 1] as number;
-        let value = first;
-        console.log(
-          "Calculating: " +
-            first +
-            " " +
-            operationsCopy[bestPos] +
-            " " +
-            second,
-        );
-        switch (operationsCopy[bestPos]) {
-          case OperatorType.Addition:
-            value += second;
-            break;
-          case OperatorType.Substraction:
-            value -= second;
-            break;
-          case OperatorType.Multiplication:
-            value *= second;
-            break;
-          case OperatorType.Division:
-            value /= second;
-            break;
-          default:
+        //Handle double operator like +-*x (1+1)(1*1)
+        if (operators.isDouble) {
+          //Currently handle only the double operator  ex: +-X/  and not the single op like sqrt
+          if (
+            bestPos === 0 ||
+            bestPos === operationsCopy.length - 1 ||
+            typeof operationsCopy[bestPos - 1] !== "number" ||
+            typeof operationsCopy[bestPos + 1] !== "number" ||
+            typeof operationsCopy[bestPos] === "number"
+          ) {
+            console.log("shit " + typeof operationsCopy[bestPos]);
             hasError = true;
             break;
+          }
+
+          const first = operationsCopy[bestPos - 1] as number;
+          const second = operationsCopy[bestPos + 1] as number;
+          let value = first;
+          console.log(
+            "Calculating: " +
+              first +
+              " " +
+              operationsCopy[bestPos] +
+              " " +
+              second,
+          );
+          switch (operationsCopy[bestPos]) {
+            case OperatorType.Addition:
+              value += second;
+              break;
+            case OperatorType.Substraction:
+              value -= second;
+              break;
+            case OperatorType.Multiplication:
+              value *= second;
+              break;
+            case OperatorType.Division:
+              value /= second;
+              break;
+            default:
+              hasError = true;
+              break;
+          }
+
+          // abcdefgh lets take d has the index. We want to  get abXfgh
+          // 1. Modify d to X -> abcXefgh
+          // 2. Remove d-1(c) -> abXefgh
+          // 3. Remove d+1(e) -> abXfgh
+
+          operationsCopy[bestPos] = value;
+          operationsCopy.splice(bestPos - 1, 1);
+          operationsCopy.splice(bestPos, 1);
+          console.log(operationsCopy);
+        } else {
+          //Handle single operator like sqrt and power
+          if (
+            bestPos === 0 ||
+            typeof operationsCopy[bestPos - 1] !== "number" ||
+            typeof operationsCopy[bestPos] === "number"
+          ) {
+            hasError = true;
+            break;
+          }
+
+          let value = operationsCopy[bestPos - 1] as number;
+          switch (operationsCopy[bestPos]) {
+            case OperatorType.Square:
+              value *= value;
+              break;
+            case OperatorType.Sqrt:
+              value = Math.sqrt(value);
+              break;
+            default:
+              hasError = true;
+              break;
+          }
+
+          // abcdefgh lets take d has the index. We want to  get abXefgh where X is the calculated value
+          // 1. Modify d to X -> abcXefgh
+          // 2. Remove d-1(c) -> abXefgh
+
+          operationsCopy[bestPos] = value;
+          operationsCopy.splice(bestPos - 1, 1);
         }
-
-        // abcdefgh lets take d has the index. We want to  get abXfgh
-        // 1. Modify d to X -> abcXefgh
-        // 2. Remove d-1(c) -> abXefgh
-        // 3. Remove d+1(e) -> abXfgh
-
-        operationsCopy[bestPos] = value;
-        operationsCopy.splice(bestPos - 1, 1);
-        operationsCopy.splice(bestPos, 1);
-        console.log(operationsCopy);
       }
     } while (bestPos !== -1 && !hasError);
   });
@@ -229,7 +283,6 @@ function Calculator() {
   const displayColor = "#1e5a8d";
 
   function onNumberPress(key: string) {
-    console.log("onNumberPress " + key);
     if (
       operationsList.length === 0 ||
       operationsList[operationsList.length - 1].type !== OperationType.Number
@@ -252,22 +305,64 @@ function Calculator() {
   }
 
   function operationsToString(equals: boolean) {
+    const reorderedOperation: string[] = [];
+    for (let i = 0; i < operationsList.length; i++) {
+      switch (operationsList[i].data) {
+        case "x²":
+          if (reorderedOperation[reorderedOperation.length - 1].endsWith(" ")) {
+            reorderedOperation[reorderedOperation.length - 1] =
+              reorderedOperation[reorderedOperation.length - 1].slice(0, -1);
+          }
+          reorderedOperation.push("² ");
+          break;
+        case "1/x":
+          reorderedOperation.push(
+            reorderedOperation[reorderedOperation.length - 1],
+          );
+          reorderedOperation[reorderedOperation.length - 2] = "1/";
+          break;
+        case "√":
+          reorderedOperation.push(
+            reorderedOperation[reorderedOperation.length - 1],
+          );
+          reorderedOperation[reorderedOperation.length - 2] = "√";
+          break;
+        default:
+          reorderedOperation.push(operationsList[i].data + " ");
+          break;
+      }
+    }
+    console.log("original " + operationsList);
+    console.log("ordered " + reorderedOperation);
     let equation = "";
 
-    for (let i = 0; i < operationsList.length; i++) {
-      equation += operationsList[i].data + " ";
+    for (let i = 0; i < reorderedOperation.length; i++) {
+      equation += reorderedOperation[i];
     }
 
     if (equals) equation += "= ";
-    return equation + "";
+    return equation;
   }
 
   function onSingleOperatorPress(key: string) {
-    console.log("onSingleOperatorPress " + key);
+    if (operationsList.length === 0) {
+      operationsList.push({
+        data: lastResult.toString().replace(".", ","),
+        type: OperationType.Number,
+      });
+      operationsList.push({ data: key, type: OperationType.SingleOperator });
+    } else if (
+      operationsList[operationsList.length - 1].type === OperationType.Number
+    ) {
+      operationsList.push({ data: key, type: OperationType.SingleOperator });
+    } else {
+      operationsList[operationsList.length - 1].data = key;
+    }
+
+    setCalculText(operationsToString(false));
   }
 
   function onDoubleOperatorPress(key: string) {
-    console.log("onOperatorPress " + key);
     if (operationsList.length === 0) {
       operationsList.push({
         data: lastResult.toString().replace(".", ","),
@@ -275,7 +370,9 @@ function Calculator() {
       });
       operationsList.push({ data: key, type: OperationType.DoubleOperator });
     } else if (
-      operationsList[operationsList.length - 1].type === OperationType.Number
+      operationsList[operationsList.length - 1].type === OperationType.Number ||
+      operationsList[operationsList.length - 1].type ===
+        OperationType.SingleOperator
     ) {
       operationsList.push({ data: key, type: OperationType.DoubleOperator });
     } else {
@@ -287,7 +384,6 @@ function Calculator() {
   }
 
   function onEqualPress() {
-    console.log("onEqualPress");
     if (operationsList.length !== 0) {
       const result = PerformPemdasEquation(); //PerformSimpleEquations();
       console.log(operationsToString(true) + result);
@@ -303,7 +399,6 @@ function Calculator() {
   }
 
   function onBackPress() {
-    console.log("onBackPress");
     if (operationsList.length !== 0) {
       if (
         operationsList[operationsList.length - 1].type === OperationType.Number
@@ -317,7 +412,6 @@ function Calculator() {
   }
 
   function onClearPress() {
-    console.log("onClearPress");
     operationsList.length = 0;
     lastResult = 0;
     setResultText("0");
@@ -325,8 +419,6 @@ function Calculator() {
   }
 
   function onClearEntryPress() {
-    console.log("onClearEntryPress");
-
     if (operationsList.length !== 0) {
       if (
         operationsList[operationsList.length - 1].type === OperationType.Number
@@ -340,7 +432,6 @@ function Calculator() {
   }
 
   function onSignPress() {
-    console.log("onSignPress");
     if (operationsList.length === 0) {
       if (lastResult !== 0)
         operationsList.push({
@@ -365,7 +456,6 @@ function Calculator() {
   }
 
   function onDotPress() {
-    console.log("onDotPress");
     if (
       operationsList.length === 0 ||
       operationsList[operationsList.length - 1].type !== OperationType.Number
@@ -395,20 +485,20 @@ function Calculator() {
     { key: "x²", callback: onSingleOperatorPress },
     { key: "√", callback: onSingleOperatorPress },
     { key: "÷", callback: onDoubleOperatorPress },
-    { key: "7", callback: null },
-    { key: "8", callback: null },
-    { key: "9", callback: null },
+    { key: "7", callback: onNumberPress },
+    { key: "8", callback: onNumberPress },
+    { key: "9", callback: onNumberPress },
     { key: "X", callback: onDoubleOperatorPress },
-    { key: "4", callback: null },
-    { key: "5", callback: null },
-    { key: "6", callback: null },
+    { key: "4", callback: onNumberPress },
+    { key: "5", callback: onNumberPress },
+    { key: "6", callback: onNumberPress },
     { key: "-", callback: onDoubleOperatorPress },
-    { key: "1", callback: null },
-    { key: "2", callback: null },
-    { key: "3", callback: null },
+    { key: "1", callback: onNumberPress },
+    { key: "2", callback: onNumberPress },
+    { key: "3", callback: onNumberPress },
     { key: "+", callback: onDoubleOperatorPress },
     { key: "±", callback: onSignPress },
-    { key: "0", callback: null },
+    { key: "0", callback: onNumberPress },
     { key: ",", callback: onDotPress },
     { key: "=", callback: onEqualPress },
   ];
@@ -459,7 +549,6 @@ function Calculator() {
                     }}
                     onClick={() => {
                       if (key.callback) key.callback(key.key);
-                      else onNumberPress(key.key);
                     }}
                   >
                     {key.key}
