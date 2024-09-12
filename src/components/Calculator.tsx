@@ -161,12 +161,9 @@ function PerformPemdasEquation(): number | undefined {
     } else hasError = true;
   });
 
-  console.log("Start " + operationsCopy);
-
   if (hasError) return undefined;
 
   operatorPriority.forEach((operators) => {
-    console.log("Checking op " + operators);
     let bestPos: number;
     do {
       bestPos = -1;
@@ -178,7 +175,6 @@ function PerformPemdasEquation(): number | undefined {
           if (index < bestPos) bestPos = index;
         }
       });
-      console.log("bestPos " + bestPos);
       if (bestPos > -1) {
         //Handle double operator like +-*x (1+1)(1*1)
         if (operators.isDouble) {
@@ -190,7 +186,6 @@ function PerformPemdasEquation(): number | undefined {
             typeof operationsCopy[bestPos + 1] !== "number" ||
             typeof operationsCopy[bestPos] === "number"
           ) {
-            console.log("shit " + typeof operationsCopy[bestPos]);
             hasError = true;
             break;
           }
@@ -198,14 +193,6 @@ function PerformPemdasEquation(): number | undefined {
           const first = operationsCopy[bestPos - 1] as number;
           const second = operationsCopy[bestPos + 1] as number;
           let value = first;
-          console.log(
-            "Calculating: " +
-              first +
-              " " +
-              operationsCopy[bestPos] +
-              " " +
-              second,
-          );
           switch (operationsCopy[bestPos]) {
             case OperatorType.Addition:
               value += second;
@@ -232,7 +219,6 @@ function PerformPemdasEquation(): number | undefined {
           operationsCopy[bestPos] = value;
           operationsCopy.splice(bestPos - 1, 1);
           operationsCopy.splice(bestPos, 1);
-          console.log(operationsCopy);
         } else {
           //Handle single operator like sqrt and power
           if (
@@ -332,8 +318,6 @@ function Calculator() {
           break;
       }
     }
-    console.log("original " + operationsList);
-    console.log("ordered " + reorderedOperation);
     let equation = "";
 
     for (let i = 0; i < reorderedOperation.length; i++) {
@@ -380,7 +364,6 @@ function Calculator() {
     }
 
     setCalculText(operationsToString(false));
-    console.log("Calc: " + operationsToString(false));
   }
 
   function onEqualPress() {
@@ -530,8 +513,12 @@ function Calculator() {
                 }}
               >
                 {calculText === "" && <p style={{ visibility: "hidden" }}>0</p>}
-                <p style={{ textAlign: "right" }}>{calculText}</p>
-                <p style={{ textAlign: "right" }}>{resultText}</p>
+                <p style={{ textAlign: "right", color: "#cccccc" }}>
+                  {calculText}
+                </p>
+                <p style={{ textAlign: "right", color: "#FFFFFFFF" }}>
+                  {resultText}
+                </p>
               </div>
               <div>
                 {keys.map((key, index) => (
