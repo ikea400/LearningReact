@@ -10,8 +10,9 @@ import {
   CategoryScale,
   LinearScale,
   ChartOptions,
-  ChartData,
+  //ChartData,
 } from "chart.js";
+import Combobox from "./Combobox.tsx";
 
 // Register Chart.js components
 ChartJS.register(
@@ -101,7 +102,10 @@ function Market() {
       <div className="container">
         <div className="row justify-content-center">
           <div>
-            <Line data={data} options={options} />
+            <div>
+              <Combobox data={["test"]} defaultValue={"test"} />
+              <Line data={data} options={options} />
+            </div>
           </div>
         </div>
       </div>
